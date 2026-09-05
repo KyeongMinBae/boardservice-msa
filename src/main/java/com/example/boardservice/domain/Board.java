@@ -22,6 +22,10 @@ public class Board {
         this.userId = userId;
     }
 
+    public Long getBoardId() {
+        return boardId;
+    }
+
     public String getTitle() {
         return title;
     }
