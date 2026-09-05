@@ -10,6 +10,8 @@ import com.example.boardservice.dto.UserResponseDto;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 public class BoardService {
     private final BoardRepository boardRepository;
@@ -37,10 +39,17 @@ public class BoardService {
                 .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
 
         // user-service로부터 사용자 정보 불러오기
-        UserResponseDto userResponseDto = userClient.fetchUser(board.getUserId());
+        Optional<UserResponseDto> optionaluserResponseDto = userClient.fetchUser(board.getUserId());
 
         // 응답값 조합하기
-        UserDto userDto = new UserDto(userResponseDto.getUserId(), userResponseDto.getName());
+        UserDto userDto = null;
+        if (optionaluserResponseDto.isPresent()) {
+            UserResponseDto userResponseDto = optionaluserResponseDto.get();
+            userDto = new UserDto(
+                    userResponseDto.getUserId(),
+                    userResponseDto.getName()
+            );
+        }
 
         BoardResponseDto boardResponseDto = new BoardResponseDto(
                 board.getBoardId(),
