@@ -41,6 +41,7 @@ public class BoardService {
             // 게시글 작성 전 100 포인트 차감
             pointClient.deductPoints(createBoardRequestDto.getUserId(), 100);
             isPointDeducted = true; // 포인트 차감 성공 플래그
+            System.out.println("포인트 차감 성공");
 
             // 게시글 작성
             Board board = new Board(
@@ -52,20 +53,23 @@ public class BoardService {
             Board savedBoard = this.boardRepository.save(board);
             savedBoardId = savedBoard.getBoardId();
             isBoardCreated = true; // 게시글 저장 성공 플래그
+            System.out.println("게시글 저장 성공");
 
             // 게시글 작성 시 작성자에게 활동 점수 10점 부여
             userClient.addActivityScore(createBoardRequestDto.getUserId(), 10);
+            System.out.println("포인트 적립 성공");
         } catch (Exception e) {
             if (isBoardCreated) {
                 // 게시글 작성 보상 트랜잭션 => 게시글 삭제
                 this.boardRepository.deleteById(savedBoardId);
+                System.out.println("[보상 트랜잭션] 게시글 삭제");
             }
 
             if (isPointDeducted) {
                 // 포인트 차감 보상 트랜잭션 => 포인트 적립
                 pointClient.addPoints(createBoardRequestDto.getUserId(), 100);
+                System.out.println("[보상 트랜잭션] 포인트 적립");
             }
-
 
             // 실패 응답으로 처리하기 위해 예외 던지기
             throw e;
