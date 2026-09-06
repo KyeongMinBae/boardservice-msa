@@ -9,7 +9,6 @@ import com.example.boardservice.dto.CreateBoardRequestDto;
 import com.example.boardservice.dto.UserDto;
 import com.example.boardservice.dto.UserResponseDto;
 import com.example.boardservice.event.BoardCreatedEvent;
-import jakarta.transaction.Transactional;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.ObjectMapper;
@@ -29,7 +28,7 @@ public class BoardService {
     public BoardService(BoardRepository boardRepository,
                         UserClient userClient,
                         PointClient pointClient,
-                        KafkaTemplate kafkaTemplate) {
+                        KafkaTemplate<String, String> kafkaTemplate) {
         this.boardRepository = boardRepository;
         this.userClient = userClient;
         this.pointClient = pointClient;
