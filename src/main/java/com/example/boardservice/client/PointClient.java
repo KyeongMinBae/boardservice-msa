@@ -1,5 +1,6 @@
 package com.example.boardservice.client;
 
+import com.example.boardservice.dto.AddPointsRequestDto;
 import com.example.boardservice.dto.DeductPointsRequestDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -27,4 +28,16 @@ public class PointClient {
                 .retrieve()
                 .toBodilessEntity();
     }
+
+    public void addPoints(Long userId, int amount) {
+        AddPointsRequestDto addPointsRequestDto
+                = new AddPointsRequestDto(userId, amount);
+        this.restClient.post()
+                .uri("/points/add")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(addPointsRequestDto)
+                .retrieve()
+                .toBodilessEntity();
+    }
+
 }
