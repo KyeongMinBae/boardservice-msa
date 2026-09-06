@@ -8,8 +8,11 @@ import com.example.boardservice.dto.BoardResponseDto;
 import com.example.boardservice.dto.CreateBoardRequestDto;
 import com.example.boardservice.dto.UserDto;
 import com.example.boardservice.dto.UserResponseDto;
+import com.example.boardservice.event.BoardCreatedEvent;
 import jakarta.transaction.Transactional;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.HashMap;
 import java.util.List;
@@ -21,12 +24,16 @@ public class BoardService {
     private final BoardRepository boardRepository;
     private final UserClient userClient;
     private final PointClient pointClient;
+    private final KafkaTemplate<String, String> kafkaTemplate;
 
-    public BoardService(BoardRepository boardRepository, UserClient userClient,
-                        PointClient pointClient) {
+    public BoardService(BoardRepository boardRepository,
+                        UserClient userClient,
+                        PointClient pointClient,
+                        KafkaTemplate kafkaTemplate) {
         this.boardRepository = boardRepository;
         this.userClient = userClient;
         this.pointClient = pointClient;
+        this.kafkaTemplate = kafkaTemplate;
     }
 
     public void create(CreateBoardRequestDto createBoardRequestDto) {
@@ -55,9 +62,11 @@ public class BoardService {
             isBoardCreated = true; // 게시글 저장 성공 플래그
             System.out.println("게시글 저장 성공");
 
-            // 게시글 작성 시 작성자에게 활동 점수 10점 부여
-            userClient.addActivityScore(createBoardRequestDto.getUserId(), 10);
-            System.out.println("포인트 적립 성공");
+            BoardCreatedEvent boardCreatedEvent
+                    = new BoardCreatedEvent(createBoardRequestDto.getUserId());
+            this.kafkaTemplate.send("board.created", toJsonString(boardCreatedEvent));
+            System.out.println("게시글 작성 완료 이벤트 발행");
+
         } catch (Exception e) {
             if (isBoardCreated) {
                 // 게시글 작성 보상 트랜잭션 => 게시글 삭제
@@ -75,6 +84,12 @@ public class BoardService {
             throw e;
         }
 
+    }
+
+    private String toJsonString(Object object) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        String message = objectMapper.writeValueAsString(object);
+        return message;
     }
 
     public BoardResponseDto getBoard(Long boardId) {
